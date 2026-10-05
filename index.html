@@ -1,0 +1,482 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>기후 변화 모둠 신문</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: 수업 정보 띠 → 모둠 선택 카드 6개 → 신문 지면(기사) + 오른쪽 분석 패널. 교사용 검토는 별도 화면. */
+:root{
+  --bg:#eef2f1; --surface:#ffffff; --paper:#fbfaf6; --ink:#17201d; --muted:#5a6661; --line:#d3dbd8;
+  --accent:#1d5c86; --accent-ink:#ffffff; --accent-soft:#dfeaf2;
+  --c-cause:#1f6fb2; --h-cause:#d7e8f8;
+  --c-state:#6b4fa3; --h-state:#e8e0f6;
+  --c-effect:#b2650f; --h-effect:#fbe7c8;
+  --c-resp:#2e7d4f; --h-resp:#d6efdf;
+  --add:#a14d5c;
+  --f-head:"Gowun Batang","Nanum Myeongjo",serif;
+  --f-body:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#111816; --surface:#18211e; --paper:#1c2522; --ink:#e6ece9; --muted:#9aa8a2; --line:#2e3a36;
+  --accent:#6fb0dc; --accent-ink:#0d1a22; --accent-soft:#1d3342;
+  --c-cause:#7ab6ea; --h-cause:#1d3a56;
+  --c-state:#b49de0; --h-state:#33294a;
+  --c-effect:#e9a75a; --h-effect:#4a3416;
+  --c-resp:#74c995; --h-resp:#173d27;
+  --add:#e3909e; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#111816; --surface:#18211e; --paper:#1c2522; --ink:#e6ece9; --muted:#9aa8a2; --line:#2e3a36;
+  --accent:#6fb0dc; --accent-ink:#0d1a22; --accent-soft:#1d3342;
+  --c-cause:#7ab6ea; --h-cause:#1d3a56;
+  --c-state:#b49de0; --h-state:#33294a;
+  --c-effect:#e9a75a; --h-effect:#4a3416;
+  --c-resp:#74c995; --h-resp:#173d27;
+  --add:#e3909e; color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.6}
+.wrap{max-width:1180px;margin:0 auto;padding-inline:20px;padding-block:20px 48px}
+a{color:var(--accent)}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.meta{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);padding-bottom:14px}
+.meta h1{font-family:var(--f-head);font-size:1.7rem;margin:0;text-wrap:balance;line-height:1.25}
+.meta .sub{color:var(--muted);font-size:.85rem;letter-spacing:.02em}
+.viewtoggle{display:flex;gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:3px}
+.viewtoggle button{border:0;background:transparent;padding:6px 14px;border-radius:999px;cursor:pointer;font-size:.88rem}
+.viewtoggle button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);font-weight:600}
+
+.groups{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin-block:16px}
+.gbtn{text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:10px 12px;cursor:pointer;display:grid;gap:2px;min-width:0}
+.gbtn .n{font-size:.75rem;font-weight:700;letter-spacing:.06em;color:var(--muted)}
+.gbtn .r{font-weight:600;font-size:.92rem;line-height:1.35}
+.gbtn .t{font-size:.78rem;color:var(--muted)}
+.gbtn[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);box-shadow:inset 0 0 0 1px var(--accent)}
+.gbtn[aria-pressed="true"] .n{color:var(--accent)}
+@media (max-width:900px){.groups{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:480px){.groups{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+.main{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:900px){.main{grid-template-columns:1fr}}
+
+.paper{background:var(--paper);border:1px solid var(--line);border-radius:4px;padding:26px 30px 30px}
+@media (max-width:480px){.paper{padding:18px 16px 22px}}
+.mast{display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px;border-bottom:3px double var(--ink);padding-bottom:6px;font-size:.78rem;color:var(--muted);letter-spacing:.04em}
+.mast b{color:var(--ink);font-family:var(--f-head);font-size:.95rem;letter-spacing:.08em}
+.kicker{margin-top:16px;font-size:.8rem;font-weight:700;color:var(--accent);letter-spacing:.05em}
+.paper h2{font-family:var(--f-head);font-size:1.75rem;line-height:1.3;margin:4px 0 8px;text-wrap:balance}
+.dek{font-family:var(--f-head);font-size:1.05rem;color:var(--muted);margin:0 0 14px;line-height:1.55}
+.byline{font-size:.78rem;color:var(--muted);border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding-block:6px;margin-bottom:16px}
+.article p{font-family:var(--f-head);font-size:1.06rem;line-height:1.95;margin:0 0 1em;max-width:62ch}
+.article h3{font-family:var(--f-body);font-size:.95rem;margin:1.4em 0 .4em;color:var(--ink)}
+.fact{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:4px 0 20px}
+.fact div{border-top:2px solid var(--ink);padding-top:6px}
+.fact .v{font-family:var(--f-body);font-weight:700;font-size:1.25rem;font-variant-numeric:tabular-nums;line-height:1.2}
+.fact .l{font-size:.78rem;color:var(--muted);line-height:1.4}
+
+/* 하이라이트 */
+.article [data-t]{border-radius:3px;transition:background-color .2s}
+.article.show-cause [data-t="cause"]{background:var(--h-cause);box-shadow:0 2px 0 var(--c-cause)}
+.article.show-state [data-t="state"]{background:var(--h-state);box-shadow:0 2px 0 var(--c-state)}
+.article.show-effect [data-t="effect"]{background:var(--h-effect);box-shadow:0 2px 0 var(--c-effect)}
+.article.show-resp [data-t="resp"]{background:var(--h-resp);box-shadow:0 2px 0 var(--c-resp)}
+.add{text-decoration:underline dotted var(--add);text-underline-offset:4px}
+.add::after{content:"보충";font-family:var(--f-body);font-size:.62rem;font-weight:700;color:var(--add);vertical-align:super;margin-left:2px}
+@media (prefers-reduced-motion:reduce){.article [data-t]{transition:none}}
+
+.tools{position:sticky;top:env(safe-area-inset-top,0px);z-index:2;background:var(--paper);display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding-block:8px;margin:-4px 0 10px;border-bottom:1px solid var(--line)}
+.tools .lab{font-size:.78rem;color:var(--muted);margin-right:4px}
+.hl{border:1.5px solid var(--line);background:var(--surface);border-radius:999px;padding:4px 12px;font-size:.85rem;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.hl i{width:10px;height:10px;border-radius:50%;display:inline-block}
+.hl[data-k="cause"] i{background:var(--c-cause)} .hl[data-k="state"] i{background:var(--c-state)}
+.hl[data-k="effect"] i{background:var(--c-effect)} .hl[data-k="resp"] i{background:var(--c-resp)}
+.hl[aria-pressed="true"][data-k="cause"]{border-color:var(--c-cause);background:var(--h-cause)}
+.hl[aria-pressed="true"][data-k="state"]{border-color:var(--c-state);background:var(--h-state)}
+.hl[aria-pressed="true"][data-k="effect"]{border-color:var(--c-effect);background:var(--h-effect)}
+.hl[aria-pressed="true"][data-k="resp"]{border-color:var(--c-resp);background:var(--h-resp)}
+.hl.all{border-style:dashed}
+
+.note{font-size:.8rem;color:var(--muted);border-left:3px solid var(--add);padding:6px 10px;margin-top:18px;background:var(--surface)}
+
+.side{display:grid;gap:14px;min-width:0}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px 18px}
+.box h4{margin:0 0 10px;font-size:.95rem}
+.box h4 small{font-weight:500;color:var(--muted);margin-left:6px}
+.steps{display:grid;gap:10px;margin:0;padding:0;list-style:none}
+.steps li{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:start}
+.steps .k{font-size:.72rem;font-weight:700;color:var(--muted);border:1px solid var(--line);border-radius:4px;padding:1px 6px;white-space:nowrap;margin-top:2px}
+.steps p{margin:0;font-size:.9rem}
+.who{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+.who span{font-size:.72rem;border-radius:4px;padding:1px 6px;background:var(--bg);color:var(--muted)}
+.think{margin:0;padding-left:1.1em;font-size:.9rem;display:grid;gap:6px}
+.src{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.src li{display:grid;gap:3px;border-top:1px solid var(--line);padding-top:10px}
+.src li:first-child{border-top:0;padding-top:0}
+.src a{font-weight:600;font-size:.9rem;line-height:1.4;text-decoration:none}
+.src a:hover{text-decoration:underline}
+.src .pub{font-size:.76rem;color:var(--muted)}
+.cov{display:flex;gap:4px;flex-wrap:wrap}
+.cov span{font-size:.7rem;font-weight:600;border-radius:4px;padding:0 6px;border:1px solid var(--line);color:var(--muted)}
+.cov span.y{color:var(--ink)}
+.cov span.y[data-k="cause"]{background:var(--h-cause);border-color:var(--c-cause)}
+.cov span.y[data-k="state"]{background:var(--h-state);border-color:var(--c-state)}
+.cov span.y[data-k="effect"]{background:var(--h-effect);border-color:var(--c-effect)}
+.cov span.y[data-k="resp"]{background:var(--h-resp);border-color:var(--c-resp)}
+.cov span.p{border-style:dashed;color:var(--ink)}
+
+/* 교사용 */
+.review{display:grid;gap:18px;margin-top:18px}
+.review .box p{margin:.3em 0;font-size:.92rem;max-width:80ch}
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:720px;font-size:.86rem}
+th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+thead th{font-size:.76rem;letter-spacing:.04em;color:var(--muted);background:var(--bg);position:sticky;top:0}
+td.m{text-align:center;font-weight:700;width:64px}
+td.m.y{color:var(--c-resp)} td.m.p{color:var(--c-effect)} td.m.n{color:var(--muted);font-weight:400}
+tr.gh td{background:var(--accent-soft);font-weight:700}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:.8rem;color:var(--muted)}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <header class="meta">
+    <div>
+      <div class="sub">사회② 8-2-2 · 우리나라의 기후 변화 · 숭곡중학교 2학년</div>
+      <h1>기후 변화 모둠 신문</h1>
+    </div>
+    <div class="viewtoggle" role="group" aria-label="화면 선택">
+      <button id="v-student" aria-pressed="true">모둠 기사 읽기</button>
+      <button id="v-teacher" aria-pressed="false">교사용 검토</button>
+    </div>
+  </header>
+
+  <section id="studentView">
+    <nav class="groups" id="groups" aria-label="모둠 선택"></nav>
+    <div class="main">
+      <article class="paper" id="paper"></article>
+      <aside class="side" id="side"></aside>
+    </div>
+  </section>
+
+  <section id="teacherView" class="review" hidden></section>
+</div>
+
+<script>
+const K = {cause:"원인", state:"현황", effect:"영향", resp:"대응 방안"};
+const S = (t, s) => `<span data-t="${t}">${s}</span>`;
+const A = (t, s) => `<span data-t="${t}" class="add">${s}</span>`;
+
+const G = [
+{
+  id:"g1", n:"1모둠", region:"설악산·팔공산", type:"산간 관광지 · 단풍 시기 변화", sheet:"단풍이 드는 시기가 늦어짐",
+  kicker:"산간 관광지 | 강원 설악산 · 대구 팔공산",
+  title:"늦게 물드는 단풍, 축제 달력도 다시 쓴다",
+  dek:"가을 늦더위로 단풍 시작과 절정이 해마다 늦어지면서, 관광객과 상인, 지방자치단체가 모두 계획을 바꾸고 있다.",
+  facts:[["최대 8일","2026년 설악산 첫 단풍, 평년보다 늦어진 기간"],["+2.3℃","최근 5년 9월 평균기온, 1990년대 대비"],["20% 미만","2024년 팔공산 단풍축제 당시 단풍 든 비율"]],
+  body:`
+<p>${S("state","올해 첫 단풍은 9월 30일 무렵 강원 설악산에서 시작될 것으로 예보됐다. 평년보다 최대 8일 늦은 시기다. 지리산과 내장산도 평년보다 각각 8일, 7일가량 늦게 물들 전망이다.")} ${S("state","산림청 관측에 따르면 단풍 절정 시기도 최근 10년 평균보다 4~5일 늦어졌고, 단풍나무류는 해마다 약 0.4일씩 늦어지는 추세다.")} ${A("state","단풍이 늦게 시작되면서 단풍을 즐길 수 있는 기간과 가장 아름다운 시기도 해마다 달라지고 있다.")}</p>
+<h3>왜 늦어질까</h3>
+<p>${S("cause","나뭇잎은 하루 최저기온이 5℃ 아래로 내려가기 시작해야 붉고 노랗게 물든다. 그런데 지구 온난화로 가을까지 더위가 이어지면서 기온이 떨어지는 시기 자체가 늦어지고 있다.")} ${S("cause","최근 5년(2021~2025년) 전국 9월 평균기온은 22.5℃로, 1990년대보다 2.3℃ 높았다.")} ${A("cause","가을까지 더위가 이어지는 근본 원인은 공장·자동차·발전소에서 석탄과 석유 같은 화석 연료를 태울 때 나오는 온실가스가 대기 중에 늘어난 데 있다.")}</p>
+<h3>주인공 없는 단풍축제</h3>
+<p>${S("state","2024년 10월 말 대구 팔공산 단풍축제는 단풍이 든 나무가 20%도 되지 않은 채 열렸다. 그해 10월 대구의 최저기온은 하루도 5℃ 아래로 내려가지 않았다.")} ${S("effect","축제는 두 달 전부터 준비하기 때문에 날짜를 쉽게 바꿀 수 없다. 단풍을 보러 온 관광객은 실망했고, 축제 대목을 기다린 상인들의 매출도 기대에 미치지 못했다.")}</p>
+<p>${S("effect","이듬해인 2025년에도 비슷한 일이 반복됐다. 팔공산 인근 식당 주인은 “단풍만 기다렸는데 막막하다”고 했고, 여행 예약을 취소하는 사람도 늘었다.")} ${A("effect","관광객이 줄면 숙박업소와 식당의 매출이 줄고, 관광 수입에 기대는 지방자치단체의 살림에도 영향을 준다.")} ${S("resp","대구 동구청은 결국 팔공산 단풍축제 날짜를 뒤로 미뤘다.")}</p>
+<h3>달라진 가을에 맞추는 방법</h3>
+<p>${S("resp","산림청은 해마다 ‘단풍 예측지도’를 내놓고, 관측 지점을 늘려 예측의 정확도를 높이고 있다.")} ${S("resp","경기 연천군은 국화가 늦게 피자 축제 기간을 일주일 연장했고, 이듬해부터는 더 일찍 꽃이 피는 품종으로 바꾸기로 했다.")} ${S("resp","전문가들은 “특정 계절 풍경에만 기대지 말고, 주민이 주도하는 차별화된 축제로 바꿔야 한다”고 조언한다.")}</p>
+<p>${A("resp","관광객도 예년 날짜만 믿기보다 예측지도를 확인하고 여행 시기를 정하면 헛걸음을 줄일 수 있다.")} ${A("resp","지역 상인과 관광업체는 단풍 외에도 숲길 걷기, 지역 음식 체험처럼 날씨에 덜 좌우되는 관광 상품을 함께 준비하는 방법을 고민하고 있다.")}</p>
+<h3>원인을 줄이는 노력</h3>
+<p>${A("resp","피해에 대비하는 것과 함께 원인을 줄이는 노력도 필요하다. 정부는 온실가스 배출을 줄이고 태양광·풍력 같은 재생 에너지를 늘리고 있다. 관광지의 숙박업소와 상점은 에너지를 아끼는 시설로 바꿀 수 있고, 관광객은 자가용 대신 대중교통으로 산을 찾는 것만으로도 온실가스를 줄일 수 있다.")}</p>`,
+  q:[
+    ["원인","단풍이 들려면 기온이 어떻게 되어야 하는가? 왜 그 시기가 늦어졌는가?",["기온 조건","늦더위"]],
+    ["현황","얼마나 늦어졌는가? 숫자로 찾아보자.",["설악산","팔공산"]],
+    ["영향","단풍이 늦어져 손해를 본 사람은 누구인가?",["관광객(개인)","상인(기업)","지자체(정부)"]],
+    ["대응","각 주체는 어떻게 대응하고 있는가?",["산림청","연천군·대구 동구","관광객·상인"]]
+  ],
+  think:["축제 날짜를 늦추면 문제가 모두 해결될까? 해마다 단풍 시기가 들쭉날쭉하다면?","단풍 예측지도가 있어도 축제를 두 달 전에 준비해야 한다면 어떤 한계가 있을까?","단풍이 아니어도 사람들이 찾아올 수 있는 축제를 제안해 보자."],
+  src:[
+    ["설악산 단풍 25일께 절정…최근 10년 대비 4∼5.2일 늦어져","뉴스1","2025.10.01","http://v.daum.net/v/20251001133825023",{cause:"p",state:"y",effect:"p",resp:"y"}],
+    ["지각 단풍…30일 설악산부터 물든다","한국경제","2026.09.11","http://v.daum.net/v/20260911174837580",{cause:"y",state:"y",effect:"n",resp:"n"}],
+    ["“단풍축제에 갔는데 주인공이 없다”…지자체 ‘울상’","매일경제","2024.10.26","http://v.daum.net/v/20241026144500632",{cause:"y",state:"y",effect:"y",resp:"y"}],
+    ["단풍 늦고 이상 한파… 관광특수 기대 자영업자들 울상","서울경제","2025.10.23","http://v.daum.net/v/20251023165111470",{cause:"y",state:"y",effect:"y",resp:"p"}]
+  ]
+},
+{
+  id:"g2", n:"2모둠", region:"경북 청송 → 강원 양구·정선", type:"농업 지역 · 사과 재배지 북상", sheet:"농작물 재배 지역의 북상",
+  kicker:"농업 지역 | 경북 청송 · 강원 양구 · 정선 · 홍천",
+  title:"사과는 북쪽으로 간다, 경북은 줄고 강원은 다섯 배로",
+  dek:"평균 기온이 오르면서 사과가 잘 자라는 땅이 북쪽으로 옮겨 가고 있다. 원래 주산지와 새로운 산지는 서로 다른 고민을 안고 있다.",
+  facts:[["-25%","경북 사과 생산량 (2015→2024)"],["약 5배","강원 사과 생산량 (2015→2024)"],["1.1%","2070년대 국내 사과 재배 가능 지역 전망"]],
+  body:`
+<p>${S("state","경북의 사과 생산량은 2015년 약 37만 3천 톤에서 2024년 약 28만 6천 톤으로 25% 줄었다. 같은 기간 강원의 사과 생산량은 약 4천 5백 톤에서 2만 2천 7백 톤으로 다섯 배 넘게 늘었고, 재배 면적도 2.4배가 됐다.")}</p>
+<p>${S("state","사과 주산지는 1990년대 대구에서 경북 북부로 옮겨 갔고, 2010년대부터는 강원 양구·정선·홍천 같은 지역으로 넓어지고 있다.")} ${A("state","복숭아·포도 같은 다른 과일의 재배지도 비슷하게 북쪽으로 넓어지고 있다.")}</p>
+<h3>왜 북쪽으로 갈까</h3>
+<p>${S("cause","사과는 비교적 서늘한 기후에서 잘 자라는 과일이다. 그런데 경북의 연평균 기온은 2005년 12.1℃에서 2024년 14.5℃로, 강원은 10.2℃에서 12.7℃로 올랐다.")} ${S("cause","사과가 자라기 좋은 기온대가 북쪽과 높은 지대로 이동한 것이다.")} ${A("cause","기온이 오르는 근본 원인은 산업화 이후 화석 연료를 많이 쓰면서 대기 중 온실가스가 늘어난 지구 온난화다.")}</p>
+<h3>누가 어떤 영향을 받나</h3>
+<p>${S("effect","경북의 사과 농가는 생산량과 품질이 떨어져 소득이 줄어들 위험이 커졌다. 반대로 강원 농가에게는 새로운 소득원이 생겼다.")} ${S("effect","생산이 줄어든 해에는 사과 값이 크게 올라 소비자의 부담도 커진다.")} ${A("effect","새 지역에서 사과를 키우거나 기존 과수원을 바꾸려면 묘목과 시설에 돈이 들어 농민의 생산비도 늘어난다.")} ${S("effect","연구 결과에 따르면 이대로라면 2050년대에는 강원 고지대에서만 사과를 재배할 수 있고, 2070년대에는 국내 재배 가능 지역이 1.1%로 줄어들 수 있다.")}</p>
+<h3>두 지역의 서로 다른 대응</h3>
+<p>${S("resp","강원도는 사과를 지역의 핵심 작물로 키우기 위해 생산 면적과 산지 유통 시설을 늘리고, 여러 시·군이 함께 쓰는 통합 브랜드를 만들기로 했다.")} ${S("resp","양구군은 흙탕물을 일으키던 국유지 배추밭을 사과 과수원으로 바꾸는 사업도 하고 있다.")}</p>
+<p>${S("resp","기존 주산지인 경북 청송군은 나무를 촘촘히 심어 관리하기 쉬운 미래형 과수원을 지원하고, 날씨와 병해충을 한곳에서 살피는 통합 관제실을 만들었다.")} ${S("resp","연구기관은 높은 기온에서도 잘 자라는 새 품종을 개발해야 한다고 강조한다.")}</p>
+<p>${A("resp","소비자는 강원산 사과처럼 새로 생긴 산지의 농산물을 알아보고, 가까운 지역에서 난 농산물을 사서 운송 과정의 온실가스를 줄이는 데 힘을 보탤 수 있다.")}</p>
+<h3>원인을 줄이는 노력</h3>
+<p>${A("resp","정부는 온실가스 감축과 재생 에너지 확대를 추진하고, 기상 관측 자료를 바탕으로 지역별 재배 적지 정보를 농민에게 알려 준다. 농가와 농업 기업은 에너지를 적게 쓰는 시설과 친환경 농법을 도입할 수 있다.")}</p>`,
+  q:[
+    ["원인","두 지역의 연평균 기온은 얼마나 올랐는가?",["경북","강원"]],
+    ["현황","생산량은 어떻게 달라졌는가? 주산지는 어떻게 이동했는가?",["경북 −25%","강원 5배"]],
+    ["영향","같은 기후 변화가 누구에게는 손해, 누구에게는 기회가 되었는가?",["경북 농가","강원 농가","소비자"]],
+    ["대응","경북과 강원의 대응은 어떻게 다른가?",["강원도·양구군","청송군","연구기관","소비자"]]
+  ],
+  think:["강원으로 재배지를 옮기는 것은 장기적으로도 해결책이 될까? 2070년대 전망과 비교해 보자.","경북 농가가 사과 대신 다른 작물을 키운다면 어떤 어려움이 있을까?","고온에 강한 품종 개발은 효과가 크지만 시간이 오래 걸린다. 그동안 무엇을 할 수 있을까?"],
+  src:[
+    ["온난화에 점점 북상하는 사과 재배지… 경북 사과 25% 줄때, 강원 5배로 늘어","동아일보","2025.11.13","http://v.daum.net/v/20251113030614340",{cause:"y",state:"y",effect:"y",resp:"p"}],
+    ["사과 재배지 북상에…강원, 핵심 생산거점으로 키운다","뉴시스","2026.09.17","http://v.daum.net/v/20260917160220127",{cause:"p",state:"p",effect:"p",resp:"y"}],
+    ["[금과가 된 사과] 사과 재배지는 북으로…현 재배지는 내실 강화로 대응","매일신문","2025.11.25","http://v.daum.net/v/20251125164943224",{cause:"y",state:"y",effect:"p",resp:"y"}],
+    ["양구 국유지 배추밭, 사과 과수원으로 바꿔 흙탕물 줄인다","(검색 결과)","2026.09.08","http://v.daum.net/v/20260908043339936",{cause:"n",state:"p",effect:"n",resp:"y"}]
+  ]
+},
+{
+  id:"g3", n:"3모둠", region:"전남·제주 → 강릉", type:"농업 지역 · 아열대 작물 재배 확대", sheet:"농작물 재배 지역의 북상",
+  kicker:"농업 지역 | 전남 · 제주 · 강원 강릉 · 충남 부여",
+  title:"망고 키우는 강릉, 기회일까 부담일까",
+  dek:"따뜻해진 겨울 덕분에 망고·바나나 같은 아열대 과일을 키우는 농가가 빠르게 늘고 있다. 하지만 비싼 난방비라는 숙제도 함께 따라왔다.",
+  facts:[["3,387곳","아열대 과수 재배 농가 (2025년)"],["+24.2%","최근 2년간 농가 수 증가율"],["5.7배","애플망고와 시설감귤의 1kg당 값 차이"]],
+  body:`
+<p>${S("state","2025년 기준 국내에서 아열대 과일을 키우는 농가는 3,387곳, 재배 면적은 약 1,199ha로 여의도 면적의 4배가 넘는다. 2년 만에 농가 수가 24% 늘었다.")} ${S("state","재배 면적의 80%가 전남, 10% 정도가 제주에 있으며 무화과·망고·석류를 많이 키운다.")}</p>
+<p>${S("state","아열대 작물은 이제 남쪽만의 일이 아니다. 강원 강릉에서는 20여 농가가 망고 등 아열대 과일을 키우고, 충남 부여에서는 감귤을 재배한다.")}</p>
+<h3>왜 늘어날까</h3>
+<p>${S("cause","지구 온난화로 겨울 기온이 오르면서 아열대 작물을 키울 수 있는 지역이 넓어졌다. 강릉의 연평균 기온은 1952년 12.0℃에서 2024년 15.3℃로 올랐다.")} ${A("cause","겨울이 따뜻해진 근본 원인은 화석 연료 사용으로 늘어난 온실가스 때문에 지구의 평균 기온이 오른 데 있다.")}</p>
+<h3>새로운 소득원, 그리고 난방비</h3>
+<p>${S("effect","아열대 과일은 값이 비싸 농가에 새로운 소득원이 된다. 애플망고는 1kg에 약 2만 7천 원으로, 시설에서 키운 감귤보다 5.7배 비싸게 팔린다.")} ${S("effect","소비자도 수입 과일보다 신선하고 당도가 높은 국산 열대 과일을 맛볼 수 있게 됐다.")}</p>
+<p>${S("effect","하지만 아열대 작물은 겨울에 비닐하우스를 데워야 해서 난방비 부담이 크다. 전북 전주에서 10a(약 300평) 규모로 망고를 키우려면 겨울 동안 등유가 1만 3천 리터 넘게 필요하다는 계산도 나왔다.")} ${S("effect","난방에 화석 연료를 많이 쓰면 온실가스가 더 배출되는 문제도 생긴다.")}</p>
+<h3>어떻게 대응하나</h3>
+<p>${S("resp","농촌진흥청은 농장 주소만 넣으면 아열대 과일을 키울 때 필요한 난방량과 탄소 배출량을 미리 알려주는 서비스를 만들었다.")} ${S("resp","전남을 비롯한 지방자치단체들은 새 품종을 연구·보급하고, 재배 기술 교육과 판매처 개척을 지원하고 있다.")}</p>
+<p>${S("resp","일부 농가는 태양열·지열로 에너지를 스스로 만드는 스마트팜을 운영하고, 직거래와 로컬푸드 매장을 통해 판로를 넓히고 있다.")} ${A("resp","소비자는 멀리서 비행기로 들여온 수입 과일 대신 국산 제철 과일을 고르는 방식으로 참여할 수 있다.")}</p>
+<h3>원인을 줄이는 노력</h3>
+<p>${A("resp","아열대 작물을 키우느라 온실가스가 더 늘어나면 기후 변화가 더 심해진다. 정부는 시설 난방에 재생 에너지를 쓰도록 지원하고, 농가는 보온 커튼처럼 열이 빠져나가지 않게 하는 시설로 에너지를 아낄 수 있다.")}</p>`,
+  q:[
+    ["원인","아열대 작물을 키울 수 있는 지역이 넓어진 이유는?",["겨울 기온","강릉 기온 변화"]],
+    ["현황","얼마나, 어디에서 늘었는가?",["전남·제주","강릉·부여"]],
+    ["영향","좋은 점과 어려운 점을 나누어 찾아보자.",["농가 소득","소비자","난방비·온실가스"]],
+    ["대응","정부와 농가는 어떻게 대응하고 있는가?",["농촌진흥청","지자체","농가","소비자"]]
+  ],
+  think:["난방을 많이 해서 아열대 작물을 키우면 기후 변화를 더 심하게 만들 수 있다. 이 모순을 어떻게 풀 수 있을까?","농가 수가 계속 늘면 값은 어떻게 될까? 농가에게 계속 이득일까?","에너지 자립형 스마트팜의 기대 효과와 한계(설치 비용 등)를 비교해 보자."],
+  src:[
+    ["기후 변화로 ‘망고‧파파야’ 아열대 과수 재배 농가 24% 증가","세계일보","2026.02.15","http://v.daum.net/v/20260215110944988",{cause:"p",state:"y",effect:"p",resp:"p"}],
+    ["“한반도 기후변화 대응”… 아열대 작물 재배 늘리는 지자체들","서울신문","2024.08.19","http://v.daum.net/v/20240819050231074",{cause:"p",state:"y",effect:"p",resp:"y"}],
+    ["망고 재배 전 ‘난방비부터 계산’…농진청, 아열대과수 에너지 예측 서비스","더팩트","2026.02.11","http://v.daum.net/v/20260211142635488",{cause:"p",state:"y",effect:"p",resp:"y"}],
+    ["아열대작물 재배지 북상…강원도에서도 ‘주렁주렁’","농민신문","2025.08.22","http://v.daum.net/v/20250822050034485",{cause:"y",state:"y",effect:"y",resp:"y"}]
+  ]
+},
+{
+  id:"g4", n:"4모둠", region:"강원 주문진·고성, 경북 포항", type:"동해안 어촌 · 난류성 어족 증가", sheet:"난류성 어족의 어획량 증가",
+  kicker:"동해안 어촌 | 강원 주문진 · 묵호 · 고성 · 경북 포항",
+  title:"오징어 떠난 동해, 방어와 참다랑어가 들어왔다",
+  dek:"바닷물이 따뜻해지면서 동해의 물고기 지도가 바뀌고 있다. 오징어는 귀해졌고, 따뜻한 바다에 사는 물고기가 늘었다.",
+  facts:[["-68%","강원 동해안 올해 오징어 어획량, 지난해 같은 기간 대비"],["+64%","같은 기간 방어 어획량"],["+1.82℃","55년간 동해안 바닷물 온도 상승 (세계 평균 0.52℃)"]],
+  body:`
+<p>${S("state","올해 강원 동해안에서 잡힌 오징어는 723톤으로 지난해 같은 기간(2,225톤)의 3분의 1에도 못 미쳤다. 반면 청어는 68%, 방어는 64% 더 많이 잡혔다.")} ${S("state","강원 고성에서는 지난해 방어가 전체 어획물 가운데 가장 많이 잡힌 물고기가 됐다.")}</p>
+<p>${S("state","따뜻한 바다에 사는 참다랑어도 늘었다. 강원 지역 참다랑어 어획량은 2021년 39톤에서 2025년 85톤으로 두 배가 넘게 늘었고, 올해 6월 주문진항에서는 한 번에 170마리가 잡히기도 했다.")} ${A("state","반대로 명태처럼 차가운 물에 사는 한류성 어종은 동해에서 거의 잡히지 않게 되었고, 어장도 북쪽으로 멀어졌다. 겨울에 잡히던 도루묵이 여름에도 잡히는 등 물고기가 잡히는 계절도 바뀌고 있다.")}</p>
+<h3>왜 바뀌었을까</h3>
+<p>${S("cause","가장 큰 원인은 바닷물 온도 상승이다. 지난 55년 동안 동해안의 바닷물 온도는 1.82℃ 올라, 세계 평균(0.52℃)의 세 배가 넘게 상승했다.")} ${S("cause","대기에서 바다로 들어오는 열이 늘고 남쪽의 따뜻한 해류(쓰시마 난류)가 계속 흘러들면서, 오징어 떼는 더 차가운 북쪽 바다로 올라가고 따뜻한 물을 좋아하는 물고기들이 그 자리를 채웠다.")} ${A("cause","바다가 따뜻해지는 근본 원인도 온실가스 증가로 인한 지구 온난화다. 바다는 늘어난 열의 대부분을 흡수한다.")}</p>
+<h3>어민도, 밥상도 달라졌다</h3>
+<p>${S("effect","오징어처럼 비싸게 팔리던 물고기가 줄면서, 전체 어획량은 늘었는데도 어민들이 벌어들인 돈은 오히려 6% 줄었다.")} ${S("effect","오징어 값이 크게 올라 소비자의 밥상에서도 오징어가 귀해졌다.")} ${A("effect","잡히는 물고기가 바뀌면 수산물을 사고파는 유통업체와 가공 공장도 다루는 품목과 판매 방식을 바꿔야 한다.")}</p>
+<p>${S("effect","양식장도 피해를 입고 있다. 경북 지역의 고수온 양식 피해액은 2016년 약 8억 원에서 2024년 약 25억 원으로 세 배가 됐다.")} ${S("effect","어업으로 생계를 잇기 어려워지면서 경북 동해안 어촌 마을의 절반 이상이 사라질 위험이 있는 곳으로 분류됐다.")} ${S("effect","참다랑어는 잡을 수 있는 양(할당량)이 정해져 있어, 할당량을 일찍 다 채운 지역 수협은 정부에 추가 배정을 요청했다.")}</p>
+<h3>바뀐 바다에 맞추는 노력</h3>
+<p>${S("resp","국립수산과학원은 동해의 아열대화를 미리 진단하고 예측하는 연구를 강화하기로 했다. 정부는 물고기를 지나치게 많이 잡지 않도록 어종별로 잡을 수 있는 양을 정하는 제도(TAC)를 넓히고 있다.")}</p>
+<p>${S("resp","경북 포항에서는 바다 대신 육지 시설에서 연어를 키우는 스마트 양식 단지가 만들어지고 있고, 물고기 양식과 채소 재배를 함께 하는 기술도 시험 중이다.")} ${A("resp","어민과 가공업체는 늘어난 청어로 과메기를 만드는 등 새로 많이 잡히는 어종을 활용할 방법을 찾고 있다.")} ${A("resp","소비자도 오징어만 찾기보다 방어·청어처럼 우리 바다에서 많이 잡히는 수산물을 골라 먹는 방식으로 변화에 함께할 수 있다.")}</p>
+<h3>원인을 줄이는 노력</h3>
+<p>${A("resp","정부는 온실가스 감축과 재생 에너지 확대, 바다 수온 관측을 함께 추진해야 한다. 어선과 양식장은 연료를 적게 쓰는 장비로 바꾸고, 시민은 전기 절약과 대중교통 이용, 분리배출로 바다를 데우는 원인을 줄이는 데 참여할 수 있다.")}</p>`,
+  q:[
+    ["원인","동해의 바닷물은 얼마나 따뜻해졌는가? 무엇 때문인가?",["수온","난류"]],
+    ["현황","줄어든 물고기와 늘어난 물고기를 나누어 정리하자.",["오징어","방어·청어·참다랑어"]],
+    ["영향","잡히는 양은 늘었는데 왜 어민의 수입은 줄었을까?",["어민·수협","양식업자","소비자","어촌"]],
+    ["대응","정부, 기업·어민, 소비자는 각각 무엇을 할 수 있는가?",["국립수산과학원·정부","포항 양식단지","어민·소비자"]]
+  ],
+  think:["육상 양식장은 고수온 피해를 줄일 수 있지만 어떤 한계(비용, 에너지)가 있을까?","방어가 많이 잡히는 지금이 계속될까? 바다가 더 따뜻해지면 방어도 북쪽으로 떠나지 않을까?","올해 9월 “오징어가 잠깐 돌아왔다”는 기사도 있다. 한 주의 변화와 몇십 년의 변화는 어떻게 다를까?"],
+  src:[
+    ["오징어 30% 줄고, 청어는 68% 늘고…동해안 ‘金징어’ 더 귀해진다","뉴스1","2026.08.22","http://v.daum.net/v/20260822063152334",{cause:"y",state:"y",effect:"y",resp:"n"}],
+    ["“방어가 왜 거기서 나와?”…동해 어장 빠르게 아열대화 진행 중","매일경제","2025.06.12","http://v.daum.net/v/20250612141803189",{cause:"y",state:"y",effect:"n",resp:"p"}],
+    ["묵호·주문진에 등장한 참다랑어 떼⋯기후변화가 바꾼 동해 어종지도","강원일보","2026.06.11","http://v.daum.net/v/20260611001016978",{cause:"y",state:"y",effect:"y",resp:"n"}],
+    ["[경북 식탁지도가 바뀐다 ③] 식물재배와 물고기 양식 결합하고 연어·방어를 육상서 키운다","영남일보","2026.06.04","http://v.daum.net/v/20260604135336900",{cause:"y",state:"y",effect:"y",resp:"y"}]
+  ]
+},
+{
+  id:"g5", n:"5모둠", region:"서울", type:"도시 · 폭염과 열대야", sheet:"폭염, 폭설 등 이상 기후 현상",
+  kicker:"도시 생활권 | 서울특별시 · 자치구",
+  title:"잠 못 드는 서울의 밤, 도시가 더위와 싸우는 법",
+  dek:"열대야가 역대 가장 많았던 여름 이후, 서울시와 자치구는 쿨링포그와 쉼터를 늘리고 있다. 더위는 모든 사람에게 똑같이 찾아오지 않는다.",
+  facts:[["22일","2025년 7월 서울 열대야 일수 (역대 7월 최다)"],["29.3℃","2025년 7월 서울 밤 최저기온 (7월 최고 기록)"],["4,078곳","서울시 무더위쉼터 (2026년)"]],
+  body:`
+<p>${S("state","2025년 7월 서울에서는 밤 최저기온이 25℃ 아래로 내려가지 않는 열대야가 22일이나 나타났다. 1994년의 21일을 넘어선 7월 역대 최다 기록이다. 7월 30일 밤에는 최저기온이 29.3℃에 머물렀다.")} ${S("state","2026년 8월에는 올해 새로 만든 가장 높은 단계의 폭염 특보인 ‘폭염중대경보’가 서울에 나흘 연속 내려졌다.")}</p>
+<h3>왜 이렇게 더울까</h3>
+<p>${S("cause","한반도 위를 북태평양고기압과 티베트고기압이 이불처럼 겹겹이 덮으면서 뜨거운 공기가 빠져나가지 못했다.")} ${S("cause","전문가들은 지구 온난화로 이런 극한 더위가 더 자주, 더 강하게 나타나고 있다고 설명한다.")} ${A("cause","화석 연료 사용으로 늘어난 온실가스 때문에 지구가 더워지고 대기의 흐름이 불안정해지면서, 고기압이 한자리에 오래 머무는 일도 잦아지고 있다.")} ${A("cause","건물과 아스팔트가 많은 도시는 낮에 데워진 열이 밤에도 잘 식지 않아 주변 지역보다 더 덥다(열섬 현상).")}</p>
+<h3>더위가 바꾼 생활</h3>
+<p>${S("effect","폭염은 열사병 같은 온열질환을 일으키고, 목숨을 잃는 사람도 생긴다. 특히 혼자 사는 노인이나 냉방이 어려운 이웃처럼 더위에 약한 사람들이 더 큰 피해를 입는다.")} ${S("effect","밤까지 에어컨을 켜는 집이 늘면서 저녁 시간 전력 사용량이 크게 늘었다.")} ${S("effect","채소가 더위에 잘 자라지 못해 시금치·오이 같은 채소 값이 오르기도 했다.")} ${A("effect","한낮에는 건설 현장 같은 야외 작업을 멈춰야 해 기업의 생산에 차질이 생기고, 정부와 지자체는 폭염 대책에 더 많은 예산을 써야 한다.")}</p>
+<h3>서울시와 자치구의 대응</h3>
+<p>${S("resp","서울시는 물을 안개처럼 뿌려 주변 온도를 낮추는 쿨링포그를 235곳으로 늘리고, 광화문광장과 청계광장 등에 냉방 쉼터를 설치했다. 무더위쉼터는 4,078곳, 그늘막도 곳곳에 설치했다.")} ${S("resp","햇빛을 반사하는 지붕(쿨루프)을 시공하고, 물청소차 199대로 달궈진 도로에 물을 뿌린다.")}</p>
+<p>${S("resp","자치구들도 나섰다. 강남구는 살수차 15대를 투입하고 더위에 약한 주민 2,600여 명을 간호사가 직접 찾아가 살폈다. 동대문구는 경로당 쉼터를 밤늦게까지 열었다.")} ${S("resp","광진구는 편의점과 은행 17곳을 ‘기후동행쉼터’로 지정해, 기업이 더위를 피할 공간을 시민과 나누도록 했다.")}</p>
+<p>${S("resp","시민은 ‘서울안전누리’ 누리집에서 가까운 쉼터 위치를 확인할 수 있다. 가장 더운 시간에는 야외 활동을 피하고 물을 자주 마시는 것이 기본이다.")} ${A("resp","이웃의 노인을 한 번 더 살피고, 에어컨 적정 온도를 지켜 전력 사용을 줄이는 것도 시민이 할 수 있는 일이다.")}</p>
+<h3>원인을 줄이는 노력</h3>
+<p>${A("resp","쉼터와 쿨링포그는 더위를 피하게 해 주지만 더위의 원인을 없애지는 못한다. 정부는 온실가스 감축과 재생 에너지 확대를, 서울시는 나무 심기와 옥상 정원처럼 도시의 열을 식히는 사업을 추진한다. 기업은 건물의 에너지 효율을 높이고, 시민은 대중교통 이용과 전기 절약으로 힘을 보탤 수 있다.")}</p>`,
+  q:[
+    ["원인","2025년 여름 서울이 특히 더웠던 이유는?",["두 고기압","지구 온난화","열섬"]],
+    ["현황","얼마나 더웠는가? 기록을 찾아보자.",["열대야 일수","최저기온","폭염중대경보"]],
+    ["영향","폭염은 누구에게 더 큰 피해를 주는가?",["취약계층(개인)","전력·채소 값","지자체"]],
+    ["대응","서울시, 자치구, 기업, 시민의 노력을 나누어 정리하자.",["서울시","자치구","편의점·은행","시민"]]
+  ],
+  think:["쿨링포그와 그늘막은 더위를 ‘피하게’ 해 준다. 더위의 원인을 줄이는 방법은 무엇일까?","에어컨을 많이 틀면 시원해지지만 전력 사용과 온실가스가 늘어난다. 어떻게 균형을 잡을 수 있을까?","우리 학교가 있는 성북구에는 어떤 폭염 대책이 있을까? 더 필요한 것은 무엇일까?"],
+  src:[
+    ["열대야 22일… 7월 ‘서울의 밤’ 역대 가장 더웠다","세계일보","2025.08.01","http://v.daum.net/v/20250801060445078",{cause:"y",state:"y",effect:"n",resp:"n"}],
+    ["서울시, 폭염 대응 쿨링포그 등 확대…광화문광장엔 냉방쉼터","연합뉴스","2026.05.28","http://v.daum.net/v/20260528111715885",{cause:"p",state:"p",effect:"p",resp:"y"}],
+    ["펄펄 끓는 서울, 폭염 잡는 자치구","아시아경제","2026.08.07","http://v.daum.net/v/20260807120245569",{cause:"p",state:"y",effect:"p",resp:"y"}],
+    ["이상 폭염에 최장열대야 기록...저녁 시간대 전력수요 증가로 이어져","(검색 결과)","2024.08.25","http://v.daum.net/v/20240825131030200",{cause:"p",state:"y",effect:"y",resp:"n"}],
+    ["“폭염에 장보기 두려워”…시금치·오이 등 채소값 ‘급등’","(검색 결과)","2026.08.02","http://v.daum.net/v/20260802144736655",{cause:"p",state:"p",effect:"y",resp:"n"}]
+  ]
+},
+{
+  id:"g6", n:"6모둠", region:"서울 강남역·양천구", type:"도시 · 집중호우와 침수", sheet:"폭염, 폭설 등 이상 기후 현상",
+  kicker:"도시 생활권 | 서울 강남역 일대 · 양천구 신월동",
+  title:"시간당 100mm가 쏟아지면, 서울 땅 밑 터널이 버틸까",
+  dek:"짧은 시간에 쏟아지는 극한 호우가 잦아지면서 도시의 배수 시설이 한계에 부딪히고 있다. 서울은 땅속 깊은 곳에 거대한 빗물 터널을 짓고 있다.",
+  facts:[["최대 1m","시간당 100mm 비가 올 때 강남역 일대 침수 깊이 (실험)"],["32만 톤","신월 대심도 빗물터널이 담을 수 있는 빗물"],["약 4배","내년 빗물터널 관련 예산안 증가 폭"]],
+  body:`
+<p>${A("state","2022년 8월, 서울 강남역 일대는 시간당 100mm가 넘는 폭우에 도로와 지하 공간이 물에 잠겼다.")} ${S("state","한국건설기술연구원이 강남역 일대를 그대로 본뜬 실험 시설에서 시험해 보니, 시간당 100mm의 비가 내리면 거리가 최대 1m 깊이까지 잠기는 것으로 나타났다.")}</p>
+<h3>왜 도시가 잠길까</h3>
+<p>${S("cause","지구 온난화로 공기가 머금을 수 있는 수증기가 많아지면서, 짧은 시간에 엄청난 양의 비가 한꺼번에 쏟아지는 극한 호우가 잦아지고 있다.")} ${S("cause","도시의 하수관과 빗물받이는 이렇게 많은 비를 한 번에 처리하도록 만들어지지 않았기 때문에, 배수 능력을 넘어서는 비가 오면 물이 넘친다.")} ${A("cause","도로와 건물이 땅을 덮고 있어 빗물이 땅속으로 스며들지 못하는 것도 원인이다.")} ${A("cause","화석 연료 사용으로 늘어난 온실가스가 지구 온난화를 일으키고, 대기의 흐름을 불안정하게 만들어 집중호우를 더 잦게 한다.")}</p>
+<h3>비가 남긴 피해</h3>
+<p>${S("effect","2026년 7월 양천구 신월동에는 시간당 최대 63mm의 비가 내렸다. 하수관과 빗물받이가 막혀 물이 빠지지 않고, 가로수가 쓰러지고, 지하 주차장에 물이 차는 등 29건의 피해가 접수됐다.")} ${A("effect","침수가 되면 반지하 주택에 사는 주민이 가장 위험하고, 지하에 있는 상가는 영업을 멈춰야 한다. 정부와 지자체는 복구에 많은 비용을 써야 한다.")} ${A("effect","도로가 통제되고 지하철 운행이 멈추면 시민들의 출퇴근길도 큰 불편을 겪는다.")}</p>
+<h3>땅 밑 40m의 빗물 저장고</h3>
+<p>${S("resp","양천구에는 땅속 40m 깊이에 지름 10m, 길이 4.7km의 ‘신월 대심도 빗물터널’이 있다. 빗물을 최대 32만 톤까지 담아 둘 수 있어, 이번 폭우 때도 침수 지역의 물이 불어나는 속도를 늦췄다.")}</p>
+<p>${S("resp","서울시는 강남역과 광화문 일대에도 같은 빗물터널을 짓고 있다. 2029년까지 주요 공사를 마치고, 완공되면 시간당 110mm의 비까지 견딜 수 있을 것으로 기대된다. 정부는 관련 예산을 올해의 약 4배인 815억 원으로 늘려 편성했다.")}</p>
+<p>${S("resp","터널이 완성되기 전까지는 침수 위험이 큰 도로 3곳의 차량 통행을 미리 막고, 내비게이션으로 우회 도로를 안내한다. 도시를 컴퓨터 속에 똑같이 재현해(디지털트윈) 침수를 미리 예측하는 기술도 개발하고 있다.")} ${S("resp","정부와 지자체는 장마철을 앞두고 빗물받이를 청소하고 맨홀 뚜껑에 추락 방지 시설을 설치한다.")}</p>
+<p>${A("resp","시민도 빗물받이 위에 쓰레기나 덮개를 올려 두지 않고, 호우 경보가 내리면 지하 주차장·지하차도·반지하 공간을 피하는 것으로 피해를 줄일 수 있다.")}</p>
+<h3>원인을 줄이는 노력</h3>
+<p>${A("resp","빗물터널은 피해를 줄이는 시설이고, 집중호우의 원인을 줄이는 노력도 함께 필요하다. 정부는 온실가스 감축과 재생 에너지 확대, 기상 관측 강화를 추진한다. 서울시는 빗물이 스며드는 보도블록과 녹지를 늘리고, 기업은 건물과 공장의 안전 점검과 에너지 절약을, 시민은 전기·물 절약과 대중교통 이용을 실천할 수 있다.")}</p>`,
+  q:[
+    ["원인","도시가 물에 잠기는 이유를 두 가지 이상 찾아보자.",["극한 호우","배수 능력","포장된 땅"]],
+    ["현황","어느 정도의 비가 오면 얼마나 잠기는가?",["강남역 실험","양천구 63mm"]],
+    ["영향","침수 피해는 누구에게 어떻게 나타나는가?",["반지하 주민(개인)","지하 상가(기업)","지자체 복구(정부)"]],
+    ["대응","빗물터널 말고 어떤 대응이 있는가?",["서울시·정부","시민"]]
+  ],
+  think:["빗물터널은 시간당 110mm까지 견딘다. 그보다 더 많은 비가 오면 어떻게 될까?","터널이 완공되는 2029~2030년까지 남은 기간 동안 어떤 대책이 필요할까?","거대한 터널을 짓는 것 말고, 빗물이 땅으로 스며들게 하는 방법(녹지, 투수 블록 등)은 어떤 효과가 있을까?"],
+  src:[
+    ["시간당 100mm 폭우에 강남역 최대 1m 침수…실규모 실험으로 확인","동아사이언스","2026.07.29","http://v.daum.net/v/20260729131736715",{cause:"y",state:"y",effect:"n",resp:"y"}],
+    ["강남역·광화문 침수 막는다…빗물터널 예산 4배","MTN 머니투데이방송","2026.09.01","http://v.daum.net/v/20260901131005267",{cause:"p",state:"p",effect:"n",resp:"y"}],
+    ["주말 ‘극한호우’ 버틴 양천구 대심도터널…“추가 호우까지 대비”","파이낸셜뉴스","2026.07.20","http://v.daum.net/v/20260720155310218",{cause:"p",state:"y",effect:"y",resp:"y"}],
+    ["기후1차관, 여름철 집중호우 대비 대심도 빗물터널 현장 점검","(검색 결과)","2026.05.14","http://v.daum.net/v/20260514140229489",{cause:"n",state:"p",effect:"n",resp:"y"}]
+  ]
+}];
+
+const KEYS=["cause","state","effect","resp"];
+const covLabel={y:"",p:"일부",n:"없음"};
+
+function renderGroups(active){
+  document.getElementById("groups").innerHTML = G.map(g=>`
+    <button class="gbtn" data-id="${g.id}" aria-pressed="${g.id===active}">
+      <span class="n">${g.n}</span><span class="r">${g.region}</span><span class="t">${g.type.split(" · ")[1]}</span>
+    </button>`).join("");
+  document.querySelectorAll(".gbtn").forEach(b=>b.addEventListener("click",()=>select(b.dataset.id,true)));
+}
+
+function cov(c){
+  return `<div class="cov">${KEYS.map(k=>`<span data-k="${k}" class="${c[k]}" title="${K[k]} ${c[k]==='y'?'있음':c[k]==='p'?'일부':'없음'}">${K[k].replace(" 방안","")}${c[k]==='p'?' 일부':''}${c[k]==='n'?' ✕':''}</span>`).join("")}</div>`;
+}
+
+function select(id, push){
+  const g = G.find(x=>x.id===id)||G[0];
+  renderGroups(g.id);
+  const paper=document.getElementById("paper");
+  paper.innerHTML = `
+    <div class="mast"><b>숭곡 기후 신문</b><span>${g.n} 탐구 기사 · 학습지 유형: ${g.sheet}</span></div>
+    <div class="kicker">${g.kicker}</div>
+    <h2>${g.title}</h2>
+    <p class="dek">${g.dek}</p>
+    <div class="byline">수업용 재구성 기사 · 오른쪽 ‘원문 기사’의 사실을 바탕으로 교사가 쉽게 다시 씀</div>
+    <div class="fact">${g.facts.map(f=>`<div><div class="v">${f[0]}</div><div class="l">${f[1]}</div></div>`).join("")}</div>
+    <div class="tools" role="group" aria-label="형광펜">
+      <span class="lab">찾은 뒤 확인하기</span>
+      ${KEYS.map(k=>`<button class="hl" data-k="${k}" aria-pressed="false"><i></i>${K[k]}</button>`).join("")}
+      <button class="hl all" data-k="all" aria-pressed="false">모두</button>
+    </div>
+    <div class="article" id="article">${g.body}</div>
+    <p class="note">점선 밑줄과 <b style="color:var(--add)">보충</b> 표시가 있는 문장은 원문 기사에 없는 내용을 수업을 위해 덧붙인 것입니다. 발표할 때 근거로 쓰려면 원문 기사나 다른 자료로 확인해 보세요.</p>`;
+  const art=document.getElementById("article");
+  const btns=[...paper.querySelectorAll(".hl")];
+  btns.forEach(b=>b.addEventListener("click",()=>{
+    const k=b.dataset.k;
+    if(k==="all"){
+      const on=b.getAttribute("aria-pressed")!=="true";
+      btns.forEach(x=>x.setAttribute("aria-pressed",on));
+      KEYS.forEach(kk=>art.classList.toggle("show-"+kk,on));
+    }else{
+      const on=b.getAttribute("aria-pressed")!=="true";
+      b.setAttribute("aria-pressed",on); art.classList.toggle("show-"+k,on);
+      const allOn=KEYS.every(kk=>art.classList.contains("show-"+kk));
+      paper.querySelector('.hl.all').setAttribute("aria-pressed",allOn);
+    }
+  }));
+
+  document.getElementById("side").innerHTML = `
+    <section class="box">
+      <h4>전개 1 · 기사 분석하기<small>학습지 표에 정리</small></h4>
+      <ol class="steps">${g.q.map(q=>`<li><span class="k">${q[0]}</span><div><p>${q[1]}</p><div class="who">${q[2].map(w=>`<span>${w}</span>`).join("")}</div></div></li>`).join("")}</ol>
+    </section>
+    <section class="box">
+      <h4>원문 기사<small>새 창으로 열림</small></h4>
+      <ul class="src">${g.src.map(s=>`<li><a href="${s[3]}" target="_blank" rel="noopener">${s[0]}</a><span class="pub">${s[1]} · ${s[2]}</span>${cov(s[4])}</li>`).join("")}</ul>
+    </section>`;
+  try{localStorage.setItem("climate-group",g.id)}catch(e){}
+  if(push){try{history.replaceState(null,"","#"+g.id)}catch(e){}}
+}
+
+function renderTeacher(){
+  const rows = G.map(g=>{
+    const head=`<tr class="gh"><td colspan="6">${g.n} · ${g.region} (${g.type.split(" · ")[1]})</td></tr>`;
+    const r=g.src.map(s=>`<tr><td><a href="${s[3]}" target="_blank" rel="noopener">${s[0]}</a></td><td>${s[1]}<br><span style="color:var(--muted)">${s[2]}</span></td>${KEYS.map(k=>`<td class="m ${s[4][k]}">${s[4][k]==='y'?'●':s[4][k]==='p'?'◐':'—'}</td>`).join("")}</tr>`).join("");
+    return head+r;
+  }).join("");
+  document.getElementById("teacherView").innerHTML=`
+    <section class="box">
+      <h4>검토 결과</h4>
+      <p>원문 기사 21건의 본문을 읽고 원인·현황·영향·대응 방안이 들어 있는지 확인했습니다. <b>한 기사만으로 네 요소를 모두, 그리고 개인·기업·정부 주체별로 찾을 수 있는 기사는 거의 없었습니다.</b> 원인·현황을 다루는 기사는 영향과 대응이 비어 있고, 대응 정책 기사는 원인과 현황이 짧은 경우가 대부분이었습니다.</p>
+      <p>네 요소가 모두 들어 있는 기사는 농민신문(3모둠)과 영남일보(4모둠) 정도이며, 두 기사도 길고(약 2,500자) 개인 차원의 대응이 빠져 있습니다.</p>
+      <p>그래서 모둠마다 원문 3~5건의 사실을 모아 <b>수업용 재구성 기사</b>를 한 편씩 만들었습니다. 원문에 없는 내용(주로 개인 차원의 대응 방안, 6모둠의 2022년 강남역 침수 사례)은 점선 밑줄과 ‘보충’ 표시로 구분했습니다. 수치는 원문 기사에 나온 값을 그대로 옮겼습니다.</p>
+      <p>교사용 학습지에 맞춰 모든 기사에 세 가지를 보충했습니다. ① 원인에 ‘화석 연료 → 온실가스 증가 → 지구 온난화’ 연결, ② 학습지의 현황·주체별 영향 중 기사에 없던 내용(단풍 기간 변화, 복숭아 등 과수 북상, 한류성 어종 감소, 농민 생산비, 유통 변화, 영업 중단·이동 불편·복구 비용 등), ③ ‘원인을 줄이는 노력’ 문단(학습지의 일반적인 예방 방안: 정부·기업·개인).</p>
+      <p>모둠별 링크: 주소 끝에 <code>#g1</code> ~ <code>#g6</code>을 붙이면 해당 모둠 기사가 바로 열립니다.</p>
+    </section>
+    <div class="legend"><span><b style="color:var(--c-resp)">●</b> 충분히 있음</span><span><b style="color:var(--c-effect)">◐</b> 일부만 있음(한 줄 언급, 한 주체만)</span><span>— 없음</span></div>
+    <div class="tbl"><table>
+      <thead><tr><th>원문 기사</th><th>언론사·날짜</th><th>원인</th><th>현황</th><th>영향</th><th>대응</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table></div>
+    <section class="box">
+      <h4>수업 전 확인할 점</h4>
+      <p>‘(검색 결과)’로 표시한 기사 4건은 검색 목록의 제목과 요약만 확인했고, 본문은 읽지 않았습니다.</p>
+      <p>4모둠 오징어 수치(723톤, 지난해 2,225톤)는 강원 동해안의 올해 누적 어획량을 지난해 같은 기간과 비교한 값입니다(뉴스1, 2026.8.22 기준).</p>
+      <p>6모둠의 강남·광화문 빗물터널은 기사마다 ‘2029년 주요 공사 완료’, ‘2030년 완공’으로 표현이 달라 둘을 함께 적었습니다.</p>
+    </section>`;
+}
+
+function setView(v){
+  const t=v==="teacher";
+  document.getElementById("studentView").hidden=t;
+  document.getElementById("teacherView").hidden=!t;
+  document.getElementById("v-student").setAttribute("aria-pressed",!t);
+  document.getElementById("v-teacher").setAttribute("aria-pressed",t);
+}
+document.getElementById("v-student").addEventListener("click",()=>setView("student"));
+document.getElementById("v-teacher").addEventListener("click",()=>setView("teacher"));
+
+renderTeacher();
+let start=(location.hash||"").replace("#","");
+if(start==="teacher"){setView("teacher");start="";}
+if(!G.some(g=>g.id===start)){try{start=localStorage.getItem("climate-group")||"g1"}catch(e){start="g1"}}
+select(start,false);
+window.addEventListener("hashchange",()=>{const h=location.hash.replace("#","");if(h==="teacher")setView("teacher");else if(G.some(g=>g.id===h)){setView("student");select(h,false)}});
+</script>
+
+</body>
+</html>
